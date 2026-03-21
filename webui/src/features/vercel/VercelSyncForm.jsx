@@ -69,6 +69,11 @@ export default function VercelSyncForm({
                         {t('vercel.lastSyncTime', { time: new Date(syncStatus.last_sync_time * 1000).toLocaleString() })}
                     </p>
                 )}
+                {syncStatus?.draft_differs && (
+                    <p className="text-xs text-amber-500 mt-2">
+                        {t('vercel.draftDiffers')}
+                    </p>
+                )}
             </div>
 
             <div className="space-y-4">

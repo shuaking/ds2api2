@@ -3,6 +3,8 @@ package admin
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +13,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"ds2api/internal/config"
 )
 
 func (h *Handler) syncVercel(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +29,7 @@ func (h *Handler) syncVercel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	validated, failed := h.validateAccountsForVercelSync(r.Context(), opts.AutoValidate)
-	_, cfgB64, err := h.Store.ExportJSONAndBase64()
+	cfgJSON, cfgB64, err := h.exportSyncConfig(req)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"detail": err.Error()})
 		return
@@ -47,7 +51,7 @@ func (h *Handler) syncVercel(w http.ResponseWriter, r *http.Request) {
 	}
 	savedCreds := h.saveVercelProjectCredentials(r.Context(), client, opts, params, headers, envs)
 	manual, deployURL := triggerVercelDeployment(r.Context(), client, opts.ProjectID, params, headers)
-	_ = h.Store.SetVercelSync(h.computeSyncHash(), time.Now().Unix())
+	_ = h.Store.SetVercelSync(syncHashForJSON(cfgJSON), time.Now().Unix())
 	result := map[string]any{"success": true, "validated_accounts": validated}
 	if manual {
 		result["message"] = "配置已同步到 Vercel，请手动触发重新部署"
@@ -209,11 +213,71 @@ func triggerVercelDeployment(ctx context.Context, client *http.Client, projectID
 	return false, deployURL
 }
 
-func (h *Handler) vercelStatus(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) vercelStatus(w http.ResponseWriter, r *http.Request) {
 	snap := h.Store.Snapshot()
 	current := h.computeSyncHash()
 	synced := snap.VercelSyncHash != "" && snap.VercelSyncHash == current
-	writeJSON(w, http.StatusOK, map[string]any{"synced": synced, "last_sync_time": nilIfZero(snap.VercelSyncTime), "has_synced_before": snap.VercelSyncHash != ""})
+	draftHash := ""
+	draftDiffers := false
+	if r != nil && r.Method == http.MethodPost && r.Body != nil {
+		var req map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+			if cfgJSON, _, err := h.exportSyncConfig(req); err == nil {
+				draftHash = syncHashForJSON(cfgJSON)
+				draftDiffers = draftHash != "" && draftHash != current
+			}
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"synced":            synced,
+		"last_sync_time":    nilIfZero(snap.VercelSyncTime),
+		"has_synced_before": snap.VercelSyncHash != "",
+		"env_backed":        h.Store.IsEnvBacked(),
+		"config_hash":       current,
+		"last_synced_hash":  snap.VercelSyncHash,
+		"draft_hash":        draftHash,
+		"draft_differs":     draftDiffers,
+	})
+}
+
+func (h *Handler) exportSyncConfig(req map[string]any) (string, string, error) {
+	override, ok := req["config_override"]
+	if !ok || override == nil {
+		return h.Store.ExportJSONAndBase64()
+	}
+	raw, err := json.Marshal(override)
+	if err != nil {
+		return "", "", err
+	}
+	var cfg config.Config
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		return "", "", err
+	}
+	cfg.DropInvalidAccounts()
+	cfg.ClearAccountTokens()
+	cfg.VercelSyncHash = ""
+	cfg.VercelSyncTime = 0
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		return "", "", err
+	}
+	return string(b), base64.StdEncoding.EncodeToString(b), nil
+}
+
+func syncHashForJSON(s string) string {
+	var cfg config.Config
+	if err := json.Unmarshal([]byte(s), &cfg); err != nil {
+		return ""
+	}
+	cfg.VercelSyncHash = ""
+	cfg.VercelSyncTime = 0
+	cfg.ClearAccountTokens()
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		return ""
+	}
+	sum := md5.Sum(b)
+	return fmt.Sprintf("%x", sum)
 }
 
 func vercelRequest(ctx context.Context, client *http.Client, method, endpoint string, params url.Values, headers map[string]string, body any) (map[string]any, int, error) {

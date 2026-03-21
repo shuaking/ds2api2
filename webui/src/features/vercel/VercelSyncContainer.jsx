@@ -4,7 +4,7 @@ import VercelSyncForm from './VercelSyncForm'
 import VercelSyncStatus from './VercelSyncStatus'
 import VercelGuide from './VercelGuide'
 
-export default function VercelSyncContainer({ onMessage, authFetch, isVercel = false }) {
+export default function VercelSyncContainer({ onMessage, authFetch, isVercel = false, config = null }) {
     const { t } = useI18n()
     const apiFetch = authFetch || fetch
 
@@ -28,6 +28,7 @@ export default function VercelSyncContainer({ onMessage, authFetch, isVercel = f
         onMessage,
         t,
         isVercel,
+        config,
     })
 
     return (

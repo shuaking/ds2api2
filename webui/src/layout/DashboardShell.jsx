@@ -79,7 +79,7 @@ export default function DashboardShell({ token, onLogout, config, fetchConfig, s
             case 'import':
                 return <BatchImport onRefresh={fetchConfig} onMessage={showMessage} authFetch={authFetch} />
             case 'vercel':
-                return <VercelSync onMessage={showMessage} authFetch={authFetch} isVercel={isVercel} />
+                return <VercelSync onMessage={showMessage} authFetch={authFetch} isVercel={isVercel} config={config} />
             case 'settings':
                 return <Settings onRefresh={fetchConfig} onMessage={showMessage} authFetch={authFetch} onForceLogout={onForceLogout} isVercel={isVercel} />
             default:

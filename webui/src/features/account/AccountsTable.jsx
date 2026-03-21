@@ -26,6 +26,7 @@ export default function AccountsTable({
     onPageSizeChange,
     searchQuery,
     onSearchChange,
+    envBacked = false,
 }) {
     const [copiedId, setCopiedId] = useState(null)
 
@@ -101,14 +102,16 @@ export default function AccountsTable({
                 ) : accounts.length > 0 ? (
                     accounts.map((acc, i) => {
                         const id = resolveAccountIdentifier(acc)
+                        const runtimeUnknown = envBacked && !acc.test_status
+                        const isActive = acc.test_status === 'ok' || acc.has_token
                         return (
                             <div key={i} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3 min-w-0">
                                     <div className={clsx(
                                         "w-2 h-2 rounded-full shrink-0",
                                         acc.test_status === 'failed' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" :
-                                        (acc.test_status === 'ok' || acc.has_token) ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
-                                        "bg-amber-500"
+                                        isActive ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
+                                        runtimeUnknown ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "bg-amber-500"
                                     )} />
                                     <div className="min-w-0">
                                         <div
@@ -122,7 +125,7 @@ export default function AccountsTable({
                                             }
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                            <span>{acc.test_status === 'failed' ? t('accountManager.testStatusFailed') : (acc.test_status === 'ok' || acc.has_token) ? t('accountManager.sessionActive') : t('accountManager.reauthRequired')}</span>
+                                            <span>{acc.test_status === 'failed' ? t('accountManager.testStatusFailed') : isActive ? t('accountManager.sessionActive') : runtimeUnknown ? t('accountManager.runtimeStatusUnknown') : t('accountManager.reauthRequired')}</span>
                                             {acc.token_preview && (
                                                 <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px]">
                                                     {acc.token_preview}

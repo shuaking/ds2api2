@@ -101,6 +101,7 @@ export default function AccountManagerContainer({ config, onRefresh, onMessage, 
                 onPageSizeChange={changePageSize}
                 searchQuery={searchQuery}
                 onSearchChange={handleSearchChange}
+                envBacked={Boolean(config?.env_backed)}
             />
 
             <AddKeyModal
