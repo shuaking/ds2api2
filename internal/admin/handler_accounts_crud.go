@@ -54,6 +54,7 @@ func (h *Handler) listAccounts(w http.ResponseWriter, r *http.Request) {
 	}
 	items := make([]map[string]any, 0, end-start)
 	for _, acc := range accounts[start:end] {
+		testStatus, _ := h.Store.AccountTestStatus(acc.Identifier())
 		token := strings.TrimSpace(acc.Token)
 		preview := ""
 		if token != "" {
@@ -70,7 +71,7 @@ func (h *Handler) listAccounts(w http.ResponseWriter, r *http.Request) {
 			"has_password":  acc.Password != "",
 			"has_token":     token != "",
 			"token_preview": preview,
-			"test_status":   acc.TestStatus,
+			"test_status":   testStatus,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": total, "page": page, "page_size": pageSize, "total_pages": totalPages})

@@ -17,6 +17,7 @@ type Store struct {
 	fromEnv bool
 	keyMap  map[string]struct{} // O(1) API key lookup index
 	accMap  map[string]int      // O(1) account lookup: identifier -> slice index
+	accTest map[string]string   // runtime-only account test status cache
 }
 
 func LoadStore() *Store {
@@ -58,6 +59,11 @@ func loadConfig() (Config, bool, error) {
 		return Config{}, false, err
 	}
 	cfg.DropInvalidAccounts()
+	if strings.Contains(string(content), `"test_status"`) && !IsVercel() {
+		if b, err := json.MarshalIndent(cfg, "", "  "); err == nil {
+			_ = os.WriteFile(ConfigPath(), b, 0o644)
+		}
+	}
 	if IsVercel() {
 		// Vercel filesystem is ephemeral/read-only for runtime writes; avoid save errors.
 		return cfg, true, nil
@@ -108,8 +114,19 @@ func (s *Store) UpdateAccountTestStatus(identifier, status string) error {
 	if !ok {
 		return errors.New("account not found")
 	}
-	s.cfg.Accounts[idx].TestStatus = status
-	return s.saveLocked()
+	s.setAccountTestStatusLocked(s.cfg.Accounts[idx], status, identifier)
+	return nil
+}
+
+func (s *Store) AccountTestStatus(identifier string) (string, bool) {
+	identifier = strings.TrimSpace(identifier)
+	if identifier == "" {
+		return "", false
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	status, ok := s.accTest[identifier]
+	return status, ok
 }
 
 func (s *Store) UpdateAccountToken(identifier, token string) error {

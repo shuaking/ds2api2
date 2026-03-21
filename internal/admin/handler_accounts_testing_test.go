@@ -93,8 +93,9 @@ func TestTestAccount_BatchModeOnlyCreatesSession(t *testing.T) {
 	if updated.Token != "new-token" {
 		t.Fatalf("expected refreshed token to be persisted, got %q", updated.Token)
 	}
-	if updated.TestStatus != "ok" {
-		t.Fatalf("expected test status ok, got %q", updated.TestStatus)
+	testStatus, ok := store.AccountTestStatus("batch@example.com")
+	if !ok || testStatus != "ok" {
+		t.Fatalf("expected runtime test status ok, got %q (ok=%v)", testStatus, ok)
 	}
 }
 

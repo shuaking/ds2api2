@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/base64"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -145,5 +146,41 @@ func TestLoadConfigOnVercelWithoutConfigFileFallsBackToMemory(t *testing.T) {
 	}
 	if len(cfg.Keys) != 0 || len(cfg.Accounts) != 0 {
 		t.Fatalf("expected empty bootstrap config, got keys=%d accounts=%d", len(cfg.Keys), len(cfg.Accounts))
+	}
+}
+
+func TestAccountTestStatusIsRuntimeOnlyAndNotPersisted(t *testing.T) {
+	tmp, err := os.CreateTemp(t.TempDir(), "config-*.json")
+	if err != nil {
+		t.Fatalf("create temp config: %v", err)
+	}
+	defer tmp.Close()
+	if _, err := tmp.WriteString(`{
+		"accounts":[{"email":"u@example.com","password":"p","test_status":"ok"}]
+	}`); err != nil {
+		t.Fatalf("write temp config: %v", err)
+	}
+
+	t.Setenv("DS2API_CONFIG_JSON", "")
+	t.Setenv("CONFIG_JSON", "")
+	t.Setenv("DS2API_CONFIG_PATH", tmp.Name())
+
+	store := LoadStore()
+	if got, ok := store.AccountTestStatus("u@example.com"); ok || got != "" {
+		t.Fatalf("expected no runtime status loaded from config, got %q", got)
+	}
+	if err := store.UpdateAccountTestStatus("u@example.com", "ok"); err != nil {
+		t.Fatalf("update test status: %v", err)
+	}
+	if got, ok := store.AccountTestStatus("u@example.com"); !ok || got != "ok" {
+		t.Fatalf("expected runtime status to be available, got %q (ok=%v)", got, ok)
+	}
+
+	content, err := os.ReadFile(tmp.Name())
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if strings.Contains(string(content), "test_status") {
+		t.Fatalf("expected test_status to stay out of persisted config, got: %s", content)
 	}
 }
