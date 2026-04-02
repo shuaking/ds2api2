@@ -1,4 +1,4 @@
-FROM node:20 AS webui-builder
+FROM node:24 AS webui-builder
 
 WORKDIR /app/webui
 COPY webui/package.json webui/package-lock.json ./
@@ -6,7 +6,7 @@ RUN npm ci
 COPY webui ./
 RUN npm run build
 
-FROM golang:1.24 AS go-builder
+FROM golang:1.26 AS go-builder
 WORKDIR /app
 ARG TARGETOS
 ARG TARGETARCH

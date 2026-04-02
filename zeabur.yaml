@@ -12,6 +12,9 @@ spec:
   readme: |-
     # DS2API (Zeabur)
 
+    ## Runtime baseline
+    - Go: 1.26
+
     ## After deployment
     - Admin panel: `/admin`
     - Health check: `/healthz`
