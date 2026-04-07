@@ -703,3 +703,15 @@ func TestParseToolCallsUnescapesHTMLEntityArguments(t *testing.T) {
 		t.Fatalf("expected html entities to be unescaped in command, got %q", cmd)
 	}
 }
+
+func TestParseToolCallsJSONPayloadKeepsLiteralEntities(t *testing.T) {
+	text := `{"tool_calls":[{"name":"bash","input":{"command":"echo &gt; literally"}}]}`
+	calls := ParseToolCalls(text, []string{"bash"})
+	if len(calls) != 1 {
+		t.Fatalf("expected one call, got %#v", calls)
+	}
+	cmd, _ := calls[0].Input["command"].(string)
+	if cmd != "echo &gt; literally" {
+		t.Fatalf("expected json payload to keep literal entities, got %q", cmd)
+	}
+}

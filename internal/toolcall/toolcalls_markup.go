@@ -2,6 +2,7 @@ package toolcall
 
 import (
 	"encoding/json"
+	"html"
 	"regexp"
 	"strings"
 )
@@ -92,7 +93,7 @@ func parseMarkupSingleToolCall(attrs string, inner string) ParsedToolCall {
 }
 
 func parseMarkupInput(raw string) map[string]any {
-	raw = strings.TrimSpace(raw)
+	raw = strings.TrimSpace(html.UnescapeString(raw))
 	if raw == "" {
 		return map[string]any{}
 	}
@@ -102,7 +103,7 @@ func parseMarkupInput(raw string) map[string]any {
 	if kv := parseMarkupKVObject(raw); len(kv) > 0 {
 		return kv
 	}
-	return map[string]any{"_raw": stripTagText(raw)}
+	return map[string]any{"_raw": html.UnescapeString(stripTagText(raw))}
 }
 
 func parseMarkupKVObject(text string) map[string]any {
@@ -123,7 +124,7 @@ func parseMarkupKVObject(text string) map[string]any {
 		if !strings.EqualFold(key, endKey) {
 			continue
 		}
-		value := strings.TrimSpace(stripTagText(m[2]))
+		value := strings.TrimSpace(html.UnescapeString(stripTagText(m[2])))
 		if value == "" {
 			continue
 		}

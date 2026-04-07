@@ -2,7 +2,6 @@ package toolcall
 
 import (
 	"encoding/json"
-	"html"
 	"strings"
 )
 
@@ -157,37 +156,12 @@ func filterToolCallsDetailed(parsed []ParsedToolCall) ([]ParsedToolCall, []strin
 		if tc.Name == "" {
 			continue
 		}
-		tc.Name = html.UnescapeString(tc.Name)
 		if tc.Input == nil {
 			tc.Input = map[string]any{}
-		}
-		for k, v := range tc.Input {
-			tc.Input[k] = unescapeHTMLValue(v)
 		}
 		out = append(out, tc)
 	}
 	return out, nil
-}
-
-func unescapeHTMLValue(v any) any {
-	switch x := v.(type) {
-	case string:
-		return html.UnescapeString(x)
-	case []any:
-		out := make([]any, len(x))
-		for i := range x {
-			out[i] = unescapeHTMLValue(x[i])
-		}
-		return out
-	case map[string]any:
-		out := make(map[string]any, len(x))
-		for k, vv := range x {
-			out[k] = unescapeHTMLValue(vv)
-		}
-		return out
-	default:
-		return v
-	}
 }
 
 //nolint:unused // retained for policy-level tool-name matching compatibility.

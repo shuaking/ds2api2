@@ -3,6 +3,7 @@ package toolcall
 import (
 	"encoding/json"
 	"encoding/xml"
+	"html"
 	"regexp"
 	"strings"
 )
@@ -114,10 +115,11 @@ func parseSingleXMLToolCall(block string) (ParsedToolCall, bool) {
 				if err := dec.DecodeElement(&node, &t); err == nil {
 					inner := strings.TrimSpace(node.Inner)
 					if inner != "" {
-						if parsed := parseToolCallInput(inner); len(parsed) > 0 {
+						unescapedInner := html.UnescapeString(inner)
+						if parsed := parseToolCallInput(unescapedInner); len(parsed) > 0 {
 							if len(parsed) == 1 {
 								if _, onlyRaw := parsed["_raw"]; onlyRaw {
-									if kv := parseMarkupKVObject(inner); len(kv) > 0 {
+									if kv := parseMarkupKVObject(unescapedInner); len(kv) > 0 {
 										for k, vv := range kv {
 											params[k] = vv
 										}
@@ -128,7 +130,7 @@ func parseSingleXMLToolCall(block string) (ParsedToolCall, bool) {
 							for k, vv := range parsed {
 								params[k] = vv
 							}
-						} else if kv := parseMarkupKVObject(inner); len(kv) > 0 {
+						} else if kv := parseMarkupKVObject(unescapedInner); len(kv) > 0 {
 							for k, vv := range kv {
 								params[k] = vv
 							}
@@ -143,12 +145,12 @@ func parseSingleXMLToolCall(block string) (ParsedToolCall, bool) {
 						params[t.Name.Local] = strings.TrimSpace(v)
 						break
 					}
-					name = strings.TrimSpace(v)
+					name = strings.TrimSpace(html.UnescapeString(v))
 				}
 			case "input", "arguments", "argument", "args", "params":
 				var v string
 				if err := dec.DecodeElement(&v, &t); err == nil && strings.TrimSpace(v) != "" {
-					if parsed := parseToolCallInput(strings.TrimSpace(v)); len(parsed) > 0 {
+					if parsed := parseToolCallInput(strings.TrimSpace(html.UnescapeString(v))); len(parsed) > 0 {
 						for k, vv := range parsed {
 							params[k] = vv
 						}
@@ -158,7 +160,7 @@ func parseSingleXMLToolCall(block string) (ParsedToolCall, bool) {
 				if inParams || inTool {
 					var v string
 					if err := dec.DecodeElement(&v, &t); err == nil {
-						params[t.Name.Local] = strings.TrimSpace(v)
+						params[t.Name.Local] = strings.TrimSpace(html.UnescapeString(v))
 					}
 				}
 			}
@@ -173,12 +175,12 @@ func parseSingleXMLToolCall(block string) (ParsedToolCall, bool) {
 		}
 	}
 	if strings.TrimSpace(name) == "" {
-		name = strings.TrimSpace(extractXMLToolNameByRegex(stripTopLevelXMLParameters(inner)))
+		name = strings.TrimSpace(html.UnescapeString(extractXMLToolNameByRegex(stripTopLevelXMLParameters(inner))))
 	}
 	if strings.TrimSpace(name) == "" {
 		return ParsedToolCall{}, false
 	}
-	return ParsedToolCall{Name: strings.TrimSpace(name), Input: params}, true
+	return ParsedToolCall{Name: strings.TrimSpace(html.UnescapeString(name)), Input: params}, true
 }
 
 func stripTopLevelXMLParameters(inner string) string {
@@ -231,7 +233,7 @@ func parseFunctionCallTagStyle(text string) (ParsedToolCall, bool) {
 	if len(m) < 2 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
@@ -241,7 +243,7 @@ func parseFunctionCallTagStyle(text string) (ParsedToolCall, bool) {
 			continue
 		}
 		key := strings.TrimSpace(pm[1])
-		val := strings.TrimSpace(pm[2])
+		val := strings.TrimSpace(html.UnescapeString(pm[2]))
 		if key != "" {
 			input[key] = val
 		}
@@ -270,11 +272,11 @@ func parseSingleAntmlFunctionCallMatch(m []string) (ParsedToolCall, bool) {
 	if len(m) < 3 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
-	body := strings.TrimSpace(m[2])
+	body := strings.TrimSpace(html.UnescapeString(m[2]))
 	input := map[string]any{}
 	if strings.HasPrefix(body, "{") {
 		if err := json.Unmarshal([]byte(body), &input); err == nil {
@@ -291,7 +293,7 @@ func parseSingleAntmlFunctionCallMatch(m []string) (ParsedToolCall, bool) {
 			continue
 		}
 		k := strings.TrimSpace(am[1])
-		v := strings.TrimSpace(am[2])
+		v := strings.TrimSpace(html.UnescapeString(am[2]))
 		if k != "" {
 			input[k] = v
 		}
@@ -304,7 +306,7 @@ func parseInvokeFunctionCallStyle(text string) (ParsedToolCall, bool) {
 	if len(m) < 3 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
@@ -314,7 +316,7 @@ func parseInvokeFunctionCallStyle(text string) (ParsedToolCall, bool) {
 			continue
 		}
 		k := strings.TrimSpace(pm[1])
-		v := strings.TrimSpace(pm[2])
+		v := strings.TrimSpace(html.UnescapeString(pm[2]))
 		if k != "" {
 			input[k] = v
 		}
@@ -334,7 +336,7 @@ func parseToolUseFunctionStyle(text string) (ParsedToolCall, bool) {
 	if len(m) < 3 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
@@ -345,7 +347,7 @@ func parseToolUseFunctionStyle(text string) (ParsedToolCall, bool) {
 			continue
 		}
 		k := strings.TrimSpace(pm[1])
-		v := strings.TrimSpace(pm[2])
+		v := strings.TrimSpace(html.UnescapeString(pm[2]))
 		if k != "" {
 			input[k] = v
 		}
@@ -358,11 +360,11 @@ func parseToolUseNameParametersStyle(text string) (ParsedToolCall, bool) {
 	if len(m) < 3 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
-	raw := strings.TrimSpace(m[2])
+	raw := strings.TrimSpace(html.UnescapeString(m[2]))
 	input := map[string]any{}
 	if raw != "" {
 		if parsed := parseToolCallInput(raw); len(parsed) > 0 {
@@ -379,11 +381,11 @@ func parseToolUseFunctionNameParametersStyle(text string) (ParsedToolCall, bool)
 	if len(m) < 3 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
-	raw := strings.TrimSpace(m[2])
+	raw := strings.TrimSpace(html.UnescapeString(m[2]))
 	input := map[string]any{}
 	if raw != "" {
 		if parsed := parseToolCallInput(raw); len(parsed) > 0 {
@@ -400,11 +402,11 @@ func parseToolUseToolNameBodyStyle(text string) (ParsedToolCall, bool) {
 	if len(m) < 3 {
 		return ParsedToolCall{}, false
 	}
-	name := strings.TrimSpace(m[1])
+	name := strings.TrimSpace(html.UnescapeString(m[1]))
 	if name == "" {
 		return ParsedToolCall{}, false
 	}
-	body := strings.TrimSpace(m[2])
+	body := strings.TrimSpace(html.UnescapeString(m[2]))
 	input := map[string]any{}
 	if body != "" {
 		if kv := parseXMLChildKV(body); len(kv) > 0 {
