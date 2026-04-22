@@ -94,7 +94,7 @@ flowchart LR
 | DeepSeek PoW | 纯 Go 高性能实现（DeepSeekHashV1），毫秒级响应 |
 | Tool Calling | 防泄漏处理：非代码块高置信特征识别、`delta.tool_calls` 早发、结构化增量输出 |
 | Admin API | 配置管理、运行时设置热更新、代理管理、账号测试 / 批量测试、会话清理、导入导出、Vercel 同步、版本检查 |
-| WebUI 管理台 | `/admin` 单页应用（中英文双语、深色模式） |
+| WebUI 管理台 | `/admin` 单页应用（中英文双语、深色模式，支持查看服务器端对话记录） |
 | 运维探针 | `GET /healthz`（存活）、`GET /readyz`（就绪） |
 
 ## 平台兼容矩阵
@@ -344,6 +344,7 @@ go run ./cmd/ds2api
 | `DS2API_JWT_EXPIRE_HOURS` | Admin JWT 过期小时数 | `24` |
 | `DS2API_CONFIG_PATH` | 配置文件路径 | `config.json` |
 | `DS2API_CONFIG_JSON` | 直接注入配置（JSON 或 Base64） | — |
+| `DS2API_CHAT_HISTORY_PATH` | 服务器端对话记录文件路径 | `data/chat_history.json` |
 | `DS2API_ENV_WRITEBACK` | 环境变量模式下自动写回配置文件并切换文件模式（`1/true/yes/on`） | 关闭 |
 | `DS2API_STATIC_ADMIN_DIR` | 管理台静态文件目录 | `static/admin` |
 | `DS2API_AUTO_BUILD_WEBUI` | 启动时自动构建 WebUI | 本地开启，Vercel 关闭 |

@@ -31,7 +31,7 @@ Docs: [Overview](README.en.md) / [Architecture](docs/ARCHITECTURE.en.md) / [Depl
 | Base URL | `http://localhost:5001` or your deployment domain |
 | Default Content-Type | `application/json` |
 | Health probes | `GET /healthz`, `GET /readyz` |
-| CORS | Enabled (`Access-Control-Allow-Origin: *`, allows `Content-Type`, `Authorization`, `X-API-Key`, `X-Ds2-Target-Account`, `X-Vercel-Protection-Bypass`) |
+| CORS | Enabled (`Access-Control-Allow-Origin: *`, allows `Content-Type`, `Authorization`, `X-API-Key`, `X-Ds2-Target-Account`, `X-Ds2-Source`, `X-Vercel-Protection-Bypass`) |
 
 ### 3.0 Adapter-Layer Notes
 
@@ -156,6 +156,10 @@ Gemini-compatible clients can also send `x-goog-api-key`, `?key=`, or `?api_key=
 | GET | `/admin/export` | Admin | Export config JSON/Base64 |
 | GET | `/admin/dev/captures` | Admin | Read local packet-capture entries |
 | DELETE | `/admin/dev/captures` | Admin | Clear local packet-capture entries |
+| GET | `/admin/chat-history` | Admin | Read server-side conversation history |
+| DELETE | `/admin/chat-history` | Admin | Clear server-side conversation history |
+| DELETE | `/admin/chat-history/{id}` | Admin | Delete one server-side conversation entry |
+| PUT | `/admin/chat-history/settings` | Admin | Update conversation history retention limit |
 | GET | `/admin/version` | Admin | Check current version and latest Release |
 
 ---

@@ -31,7 +31,7 @@
 | Base URL | `http://localhost:5001` 或你的部署域名 |
 | 默认 Content-Type | `application/json` |
 | 健康检查 | `GET /healthz`、`GET /readyz` |
-| CORS | 已启用（`Access-Control-Allow-Origin: *`，允许 `Content-Type`, `Authorization`, `X-API-Key`, `X-Ds2-Target-Account`, `X-Vercel-Protection-Bypass`） |
+| CORS | 已启用（`Access-Control-Allow-Origin: *`，允许 `Content-Type`, `Authorization`, `X-API-Key`, `X-Ds2-Target-Account`, `X-Ds2-Source`, `X-Vercel-Protection-Bypass`） |
 
 ### 3.0 接口适配层说明
 
@@ -156,6 +156,10 @@ Gemini 兼容客户端还可以使用 `x-goog-api-key`、`?key=` 或 `?api_key=`
 | GET | `/admin/export` | Admin | 导出配置 JSON/Base64 |
 | GET | `/admin/dev/captures` | Admin | 查看本地抓包记录 |
 | DELETE | `/admin/dev/captures` | Admin | 清空本地抓包记录 |
+| GET | `/admin/chat-history` | Admin | 查看服务器端对话记录 |
+| DELETE | `/admin/chat-history` | Admin | 清空服务器端对话记录 |
+| DELETE | `/admin/chat-history/{id}` | Admin | 删除单条服务器端对话记录 |
+| PUT | `/admin/chat-history/settings` | Admin | 更新对话记录保留条数 |
 | GET | `/admin/version` | Admin | 查询当前版本与最新 Release |
 
 ---

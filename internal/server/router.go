@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -17,6 +20,7 @@ import (
 	"ds2api/internal/adapter/openai"
 	"ds2api/internal/admin"
 	"ds2api/internal/auth"
+	"ds2api/internal/chathistory"
 	"ds2api/internal/config"
 	"ds2api/internal/deepseek"
 	"ds2api/internal/webui"
@@ -46,17 +50,21 @@ func NewApp() (*App, error) {
 	} else {
 		config.Logger.Info("[PoW] pure Go solver ready")
 	}
+	chatHistoryStore := chathistory.New(config.ChatHistoryPath())
+	if err := chatHistoryStore.Err(); err != nil {
+		config.Logger.Warn("[chat_history] unavailable", "path", chatHistoryStore.Path(), "error", err)
+	}
 
-	openaiHandler := &openai.Handler{Store: store, Auth: resolver, DS: dsClient}
+	openaiHandler := &openai.Handler{Store: store, Auth: resolver, DS: dsClient, ChatHistory: chatHistoryStore}
 	claudeHandler := &claude.Handler{Store: store, Auth: resolver, DS: dsClient, OpenAI: openaiHandler}
 	geminiHandler := &gemini.Handler{Store: store, Auth: resolver, DS: dsClient, OpenAI: openaiHandler}
-	adminHandler := &admin.Handler{Store: store, Pool: pool, DS: dsClient, OpenAI: openaiHandler}
+	adminHandler := &admin.Handler{Store: store, Pool: pool, DS: dsClient, OpenAI: openaiHandler, ChatHistory: chatHistoryStore}
 	webuiHandler := webui.NewHandler()
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(filteredLogger())
 	r.Use(middleware.Recoverer)
 	r.Use(cors)
 	r.Use(timeout(0))
@@ -99,11 +107,47 @@ func timeout(d time.Duration) func(http.Handler) http.Handler {
 	return middleware.Timeout(d)
 }
 
+func filteredLogger() func(http.Handler) http.Handler {
+	color := true
+	if isWindowsRuntime() {
+		color = false
+	}
+	base := &middleware.DefaultLogFormatter{
+		Logger:  log.New(os.Stdout, "", log.LstdFlags),
+		NoColor: !color,
+	}
+	return middleware.RequestLogger(&filteredLogFormatter{base: base})
+}
+
+func isWindowsRuntime() bool {
+	return runtime.GOOS == "windows"
+}
+
+type filteredLogFormatter struct {
+	base *middleware.DefaultLogFormatter
+}
+
+func (f *filteredLogFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
+	if r != nil && r.Method == http.MethodGet {
+		path := strings.TrimSpace(r.URL.Path)
+		if path == "/admin/chat-history" || strings.HasPrefix(path, "/admin/chat-history/") {
+			return noopLogEntry{}
+		}
+	}
+	return f.base.NewLogEntry(r)
+}
+
+type noopLogEntry struct{}
+
+func (noopLogEntry) Write(_ int, _ int, _ http.Header, _ time.Duration, _ interface{}) {}
+
+func (noopLogEntry) Panic(_ interface{}, _ []byte) {}
+
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key, X-Ds2-Target-Account, X-Vercel-Protection-Bypass")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key, X-Ds2-Target-Account, X-Ds2-Source, X-Vercel-Protection-Bypass")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return

@@ -17,6 +17,10 @@
             "label": "API Test",
             "desc": "Test API connectivity and responses"
         },
+        "history": {
+            "label": "Conversations",
+            "desc": "Browse server-side external chat history"
+        },
         "import": {
             "label": "Batch Import",
             "desc": "Bulk import account configuration"
@@ -233,6 +237,66 @@
         "generating": "Generating response...",
         "enterMessage": "Enter a message...",
         "adminConsoleLabel": "DeepSeek admin console"
+    },
+    "chatHistory": {
+        "loading": "Loading conversation history...",
+        "loadFailed": "Failed to load conversation history.",
+        "retentionTitle": "Retention",
+        "retentionDesc": "The server keeps only the latest N external /v1/chat/completions conversations.",
+        "off": "OFF",
+        "refresh": "Refresh",
+        "clearAll": "Clear all",
+        "clearSuccess": "Conversation history cleared.",
+        "clearFailed": "Failed to clear conversation history.",
+        "deleteSuccess": "Conversation deleted.",
+        "deleteFailed": "Failed to delete conversation.",
+        "updateLimitFailed": "Failed to update retention limit.",
+        "limitUpdated": "Retention limit updated to {limit}",
+        "listTitle": "History",
+        "detailTitle": "Details",
+        "viewModeList": "List mode",
+        "viewModeMerged": "Merged mode",
+        "emptyTitle": "No conversation history yet",
+        "emptyDesc": "When external clients call /v1/chat/completions, the server will save the results here automatically.",
+        "untitled": "Untitled conversation",
+        "noPreview": "No preview available.",
+        "selectPrompt": "Select a record on the left to view details.",
+        "mergedInput": "Final message sent to DeepSeek",
+        "emptyMergedPrompt": "No merged prompt is available.",
+        "expand": "Expand",
+        "collapse": "Collapse",
+        "reasoningTrace": "Reasoning Trace",
+        "failedOutput": "The request failed and no assistant output is available.",
+        "emptyAssistantOutput": "No assistant output is available.",
+        "emptyUserInput": "No user input is available.",
+        "confirmClearTitle": "Clear all records?",
+        "confirmClearDesc": "This deletes every server-side conversation record and cannot be undone.",
+        "confirmClearAction": "Clear all",
+        "metaTitle": "Metadata",
+        "metaAccount": "Account",
+        "metaElapsed": "Elapsed",
+        "metaModel": "Model",
+        "metaStatusCode": "Status code",
+        "metaStream": "Output mode",
+        "metaCaller": "Caller fingerprint",
+        "metaTime": "Completed at",
+        "metaUnknown": "Unknown",
+        "backToTop": "Back to top",
+        "backToBottom": "Jump to bottom",
+        "streamMode": "Streaming",
+        "nonStreamMode": "Non-streaming",
+        "status": {
+            "streaming": "Streaming",
+            "success": "Success",
+            "error": "Error",
+            "stopped": "Stopped"
+        },
+        "role": {
+            "user": "User",
+            "assistant": "Assistant",
+            "tool": "Tool",
+            "system": "System"
+        }
     },
     "batchImport": {
         "templates": {

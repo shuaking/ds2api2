@@ -17,6 +17,10 @@
             "label": "API 测试",
             "desc": "测试 API 连接与响应"
         },
+        "history": {
+            "label": "对话记录",
+            "desc": "查看服务器保存的外部对话历史"
+        },
         "import": {
             "label": "批量导入",
             "desc": "批量导入账号配置"
@@ -233,6 +237,66 @@
         "generating": "正在生成响应...",
         "enterMessage": "输入消息...",
         "adminConsoleLabel": "DeepSeek 管理员界面"
+    },
+    "chatHistory": {
+        "loading": "正在加载对话记录...",
+        "loadFailed": "加载对话记录失败",
+        "retentionTitle": "保留条数",
+        "retentionDesc": "服务器端只保留最新 N 条外部 /v1/chat/completions 对话记录。",
+        "off": "OFF",
+        "refresh": "刷新",
+        "clearAll": "清空全部",
+        "clearSuccess": "对话记录已清空",
+        "clearFailed": "清空对话记录失败",
+        "deleteSuccess": "对话记录已删除",
+        "deleteFailed": "删除对话记录失败",
+        "updateLimitFailed": "更新保留条数失败",
+        "limitUpdated": "保留条数已更新为 {limit}",
+        "listTitle": "历史列表",
+        "detailTitle": "对话详情",
+        "viewModeList": "列表模式",
+        "viewModeMerged": "合并模式",
+        "emptyTitle": "还没有可用的对话记录",
+        "emptyDesc": "当外部客户端调用 /v1/chat/completions 时，服务端会自动把结果写入这里。",
+        "untitled": "未命名对话",
+        "noPreview": "暂无预览内容",
+        "selectPrompt": "从左侧选择一条记录查看详情。",
+        "mergedInput": "最终发送给 DeepSeek 的完整消息",
+        "emptyMergedPrompt": "没有可展示的完整消息。",
+        "expand": "展开全部",
+        "collapse": "收起",
+        "reasoningTrace": "思维链过程",
+        "failedOutput": "请求失败，未生成可展示的回答。",
+        "emptyAssistantOutput": "没有可展示的生成内容。",
+        "emptyUserInput": "没有可展示的用户输入。",
+        "confirmClearTitle": "确认清空全部记录？",
+        "confirmClearDesc": "此操作会删除服务器里的全部对话记录，无法恢复。",
+        "confirmClearAction": "确认清空",
+        "metaTitle": "元信息",
+        "metaAccount": "使用账号",
+        "metaElapsed": "耗时",
+        "metaModel": "模型",
+        "metaStatusCode": "状态码",
+        "metaStream": "输出模式",
+        "metaCaller": "调用方指纹",
+        "metaTime": "完成时间",
+        "metaUnknown": "未知",
+        "backToTop": "回到顶部",
+        "backToBottom": "跳到底部",
+        "streamMode": "流式",
+        "nonStreamMode": "非流式",
+        "status": {
+            "streaming": "进行中",
+            "success": "成功",
+            "error": "失败",
+            "stopped": "已停止"
+        },
+        "role": {
+            "user": "用户",
+            "assistant": "助手",
+            "tool": "工具",
+            "system": "系统"
+        }
     },
     "batchImport": {
         "templates": {

@@ -2,13 +2,16 @@ package admin
 
 import (
 	"github.com/go-chi/chi/v5"
+
+	"ds2api/internal/chathistory"
 )
 
 type Handler struct {
-	Store  ConfigStore
-	Pool   PoolController
-	DS     DeepSeekCaller
-	OpenAI OpenAIChatCaller
+	Store       ConfigStore
+	Pool        PoolController
+	DS          DeepSeekCaller
+	OpenAI      OpenAIChatCaller
+	ChatHistory *chathistory.Store
 }
 
 func RegisterRoutes(r chi.Router, h *Handler) {
@@ -50,6 +53,11 @@ func RegisterRoutes(r chi.Router, h *Handler) {
 		pr.Get("/export", h.exportConfig)
 		pr.Get("/dev/captures", h.getDevCaptures)
 		pr.Delete("/dev/captures", h.clearDevCaptures)
+		pr.Get("/chat-history", h.getChatHistory)
+		pr.Get("/chat-history/{id}", h.getChatHistoryItem)
+		pr.Delete("/chat-history", h.clearChatHistory)
+		pr.Delete("/chat-history/{id}", h.deleteChatHistoryItem)
+		pr.Put("/chat-history/settings", h.updateChatHistorySettings)
 		pr.Get("/version", h.getVersion)
 	})
 }

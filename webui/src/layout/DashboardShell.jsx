@@ -10,12 +10,14 @@ import {
     X,
     Server,
     Users,
-    Globe
+    Globe,
+    History
 } from 'lucide-react'
 import clsx from 'clsx'
 
 import AccountManagerContainer from '../features/account/AccountManagerContainer'
 import ApiTesterContainer from '../features/apiTester/ApiTesterContainer'
+import ChatHistoryContainer from '../features/chatHistory/ChatHistoryContainer'
 import BatchImport from '../components/BatchImport'
 import VercelSyncContainer from '../features/vercel/VercelSyncContainer'
 import SettingsContainer from '../features/settings/SettingsContainer'
@@ -33,6 +35,7 @@ export default function DashboardShell({ token, onLogout, config, fetchConfig, s
         { id: 'accounts', label: t('nav.accounts.label'), icon: Users, description: t('nav.accounts.desc') },
         { id: 'proxies', label: t('nav.proxies.label'), icon: Globe, description: t('nav.proxies.desc') },
         { id: 'test', label: t('nav.test.label'), icon: Server, description: t('nav.test.desc') },
+        { id: 'history', label: t('nav.history.label'), icon: History, description: t('nav.history.desc') },
         { id: 'import', label: t('nav.import.label'), icon: Upload, description: t('nav.import.desc') },
         { id: 'vercel', label: t('nav.vercel.label'), icon: Cloud, description: t('nav.vercel.desc') },
         { id: 'settings', label: t('nav.settings.label'), icon: SettingsIcon, description: t('nav.settings.desc') },
@@ -98,6 +101,8 @@ export default function DashboardShell({ token, onLogout, config, fetchConfig, s
                 return <ProxyManagerContainer config={config} onRefresh={fetchConfig} onMessage={showMessage} authFetch={authFetch} />
             case 'test':
                 return <ApiTesterContainer config={config} onMessage={showMessage} authFetch={authFetch} />
+            case 'history':
+                return <ChatHistoryContainer onMessage={showMessage} authFetch={authFetch} />
             case 'import':
                 return <BatchImport onRefresh={fetchConfig} onMessage={showMessage} authFetch={authFetch} />
             case 'vercel':

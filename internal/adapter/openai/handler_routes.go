@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"ds2api/internal/auth"
+	"ds2api/internal/chathistory"
 	"ds2api/internal/config"
 	"ds2api/internal/util"
 )
@@ -25,9 +26,10 @@ const (
 var writeJSON = util.WriteJSON
 
 type Handler struct {
-	Store ConfigReader
-	Auth  AuthResolver
-	DS    DeepSeekCaller
+	Store       ConfigReader
+	Auth        AuthResolver
+	DS          DeepSeekCaller
+	ChatHistory *chathistory.Store
 
 	leaseMu      sync.Mutex
 	streamLeases map[string]streamLease
