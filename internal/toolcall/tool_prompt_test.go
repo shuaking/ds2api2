@@ -109,6 +109,16 @@ func TestBuildToolCallInstructions_WriteUsesFilePathAndContent(t *testing.T) {
 	}
 }
 
+func TestBuildToolCallInstructions_AnchorsMissingOpeningWrapperFailureMode(t *testing.T) {
+	out := BuildToolCallInstructions([]string{"read_file"})
+	if !strings.Contains(out, "Never omit the opening <tool_calls> tag") {
+		t.Fatalf("expected explicit missing-opening-tag warning, got: %s", out)
+	}
+	if !strings.Contains(out, "Wrong 3 — missing opening wrapper") {
+		t.Fatalf("expected missing-opening-wrapper negative example, got: %s", out)
+	}
+}
+
 func findInvokeBlocks(text, name string) []string {
 	open := `<invoke name="` + name + `">`
 	remaining := text

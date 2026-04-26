@@ -43,6 +43,9 @@ func parseMarkupKVObject(text string) map[string]any {
 }
 
 func parseMarkupValue(inner string) any {
+	if value, ok := extractStandaloneCDATA(inner); ok {
+		return value
+	}
 	value := strings.TrimSpace(extractRawTagValue(inner))
 	if value == "" {
 		return ""
@@ -89,8 +92,8 @@ func extractRawTagValue(inner string) string {
 	}
 
 	// 1. Check for CDATA - if present, it's the ultimate "safe" container.
-	if cdataMatches := cdataPattern.FindStringSubmatch(trimmed); len(cdataMatches) >= 2 {
-		return cdataMatches[1] // Return raw content between CDATA brackets
+	if value, ok := extractStandaloneCDATA(trimmed); ok {
+		return value // Return raw content between CDATA brackets
 	}
 
 	// 2. If no CDATA, we still want to be robust.
@@ -101,4 +104,12 @@ func extractRawTagValue(inner string) string {
 	// If it contains what looks like a single tag and no other text, it might be nested XML
 	// but for KV objects we usually want the value.
 	return html.UnescapeString(inner)
+}
+
+func extractStandaloneCDATA(inner string) (string, bool) {
+	trimmed := strings.TrimSpace(inner)
+	if cdataMatches := cdataPattern.FindStringSubmatch(trimmed); len(cdataMatches) >= 2 {
+		return cdataMatches[1], true
+	}
+	return "", false
 }

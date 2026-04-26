@@ -54,6 +54,32 @@ echo "hello"
 	}
 }
 
+func TestParseToolCallsKeepsToolSyntaxInsideCDATAAsParameterText(t *testing.T) {
+	payload := strings.Join([]string{
+		"# Release notes",
+		"",
+		"```xml",
+		"<tool_calls>",
+		"  <invoke name=\"demo\">",
+		"    <parameter name=\"value\">x</parameter>",
+		"  </invoke>",
+		"</tool_calls>",
+		"```",
+	}, "\n")
+	text := `<tool_calls><invoke name="Write"><parameter name="content"><![CDATA[` + payload + `]]></parameter><parameter name="file_path">DS2API-4.0-Release-Notes.md</parameter></invoke></tool_calls>`
+	calls := ParseToolCalls(text, []string{"Write"})
+	if len(calls) != 1 {
+		t.Fatalf("expected 1 call, got %#v", calls)
+	}
+	content, _ := calls[0].Input["content"].(string)
+	if content != payload {
+		t.Fatalf("expected CDATA payload with nested tool syntax to survive intact, got %q", content)
+	}
+	if calls[0].Input["file_path"] != "DS2API-4.0-Release-Notes.md" {
+		t.Fatalf("expected file_path parameter, got %#v", calls[0].Input)
+	}
+}
+
 func TestParseToolCallsSupportsInvokeParameters(t *testing.T) {
 	text := `<tool_calls><invoke name="get_weather"><parameter name="city">beijing</parameter><parameter name="unit">c</parameter></invoke></tool_calls>`
 	calls := ParseToolCalls(text, []string{"get_weather"})
@@ -172,6 +198,26 @@ func TestParseToolCallsRejectsBareInvokeWithoutToolCallsWrapper(t *testing.T) {
 	}
 	if res.SawToolCallSyntax {
 		t.Fatalf("expected bare invoke to no longer count as supported syntax, got %#v", res)
+	}
+}
+
+func TestParseToolCallsRepairsMissingOpeningToolCallsWrapperWhenClosingTagExists(t *testing.T) {
+	text := `Before tool call
+<invoke name="read_file"><parameter name="path">README.md</parameter></invoke>
+</tool_calls>
+after`
+	res := ParseToolCallsDetailed(text, []string{"read_file"})
+	if len(res.Calls) != 1 {
+		t.Fatalf("expected repaired wrapper to parse exactly one call, got %#v", res)
+	}
+	if res.Calls[0].Name != "read_file" {
+		t.Fatalf("expected repaired wrapper to preserve tool name, got %#v", res.Calls[0])
+	}
+	if got, _ := res.Calls[0].Input["path"].(string); got != "README.md" {
+		t.Fatalf("expected repaired wrapper to preserve args, got %#v", res.Calls[0].Input)
+	}
+	if !res.SawToolCallSyntax {
+		t.Fatalf("expected repaired wrapper to mark tool syntax seen, got %#v", res)
 	}
 }
 

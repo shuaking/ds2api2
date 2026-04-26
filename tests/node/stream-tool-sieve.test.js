@@ -118,6 +118,60 @@ test('sieve keeps long XML tool calls buffered until the closing tag arrives', (
   assert.equal(finalCalls[0].input.content, longContent);
 });
 
+test('sieve keeps CDATA tool examples buffered until the outer closing tag arrives', () => {
+  const content = [
+    '# DS2API 4.0 更新内容',
+    '',
+    'x'.repeat(4096),
+    '```xml',
+    '<tool_calls>',
+    '  <invoke name="demo">',
+    '    <parameter name="value">x</parameter>',
+    '  </invoke>',
+    '</tool_calls>',
+    '```',
+    'tail',
+  ].join('\n');
+  const innerClose = content.indexOf('</tool_calls>') + '</tool_calls>'.length;
+  const state = createToolSieveState();
+  const chunks = [
+    '<tool_calls>\n  <invoke name="Write">\n    <parameter name="content"><![CDATA[',
+    content.slice(0, innerClose),
+    content.slice(innerClose),
+    ']]></parameter>\n    <parameter name="file_path">DS2API-4.0-Release-Notes.md</parameter>\n  </invoke>\n</tool_calls>',
+  ];
+  const events = [];
+  chunks.forEach((chunk, idx) => {
+    const next = processToolSieveChunk(state, chunk, ['Write']);
+    if (idx <= 1) {
+      assert.deepEqual(next, []);
+    }
+    events.push(...next);
+  });
+  events.push(...flushToolSieve(state, ['Write']));
+
+  const leakedText = collectText(events);
+  const finalCalls = events.filter((evt) => evt.type === 'tool_calls').flatMap((evt) => evt.calls || []);
+  assert.equal(leakedText, '');
+  assert.equal(finalCalls.length, 1);
+  assert.equal(finalCalls[0].name, 'Write');
+  assert.equal(finalCalls[0].input.content, content);
+});
+
+test('parseToolCalls keeps XML-looking CDATA content intact', () => {
+  const content = [
+    '# Release notes',
+    '```xml',
+    '<tool_calls><invoke name="demo"><parameter name="value">x</parameter></invoke></tool_calls>',
+    '```',
+  ].join('\n');
+  const payload = `<tool_calls><invoke name="Write"><parameter name="content"><![CDATA[${content}]]></parameter><parameter name="file_path">DS2API-4.0-Release-Notes.md</parameter></invoke></tool_calls>`;
+  const calls = parseToolCalls(payload, ['Write']);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].input.content, content);
+  assert.equal(calls[0].input.file_path, 'DS2API-4.0-Release-Notes.md');
+});
+
 test('sieve passes JSON tool_calls payload through as text (XML-only)', () => {
   const events = runSieve(
     ['{"tool_calls":[{"name":"read_file","input":{"path":"README.MD"}}]}'],
