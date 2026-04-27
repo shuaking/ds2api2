@@ -67,9 +67,6 @@ func TestBuildOpenAICurrentInputContextTranscriptUsesInjectedFileWrapper(t *test
 	if !strings.HasPrefix(transcript, "[file content end]\n\n") {
 		t.Fatalf("expected injected file wrapper prefix, got %q", transcript)
 	}
-	if !strings.Contains(transcript, "[context note]") || !strings.Contains(transcript, "compacted snapshot of the prior conversation history") {
-		t.Fatalf("expected compacted context note in transcript, got %q", transcript)
-	}
 	if !strings.Contains(transcript, "<｜begin▁of▁sentence｜>") {
 		t.Fatalf("expected serialized conversation markers, got %q", transcript)
 	}
@@ -299,8 +296,8 @@ func TestApplyCurrentInputFileUploadsFirstTurnWithInjectedWrapper(t *testing.T) 
 	if strings.Contains(out.FinalPrompt, "CURRENT_USER_INPUT.txt") || strings.Contains(out.FinalPrompt, "IGNORE.txt") || strings.Contains(out.FinalPrompt, "Read that file") {
 		t.Fatalf("expected live prompt not to instruct file reads, got %s", out.FinalPrompt)
 	}
-	if !strings.Contains(out.FinalPrompt, promptcompat.BuildOpenAICurrentInputContextPrompt()) {
-		t.Fatalf("expected compacted-context instruction in live prompt, got %s", out.FinalPrompt)
+	if !strings.Contains(out.FinalPrompt, "Answer the latest user request directly.") {
+		t.Fatalf("expected neutral continuation instruction in live prompt, got %s", out.FinalPrompt)
 	}
 	if len(out.RefFileIDs) != 1 || out.RefFileIDs[0] != "file-inline-1" {
 		t.Fatalf("expected current input file id in ref_file_ids, got %#v", out.RefFileIDs)
@@ -348,10 +345,10 @@ func TestApplyCurrentInputFileUploadsFullContextFile(t *testing.T) {
 		}
 	}
 	if strings.Contains(out.FinalPrompt, "first user turn") || strings.Contains(out.FinalPrompt, "latest user turn") || strings.Contains(out.FinalPrompt, "CURRENT_USER_INPUT.txt") || strings.Contains(out.FinalPrompt, "IGNORE.txt") || strings.Contains(out.FinalPrompt, "Read that file") {
-		t.Fatalf("expected live prompt to stay in compacted-context mode, got %s", out.FinalPrompt)
+		t.Fatalf("expected live prompt to use only a neutral continuation instruction, got %s", out.FinalPrompt)
 	}
-	if !strings.Contains(out.FinalPrompt, promptcompat.BuildOpenAICurrentInputContextPrompt()) {
-		t.Fatalf("expected compacted-context instruction in live prompt, got %s", out.FinalPrompt)
+	if !strings.Contains(out.FinalPrompt, "Answer the latest user request directly.") {
+		t.Fatalf("expected neutral continuation instruction in live prompt, got %s", out.FinalPrompt)
 	}
 }
 
@@ -431,8 +428,8 @@ func TestChatCompletionsCurrentInputFileUploadsContextAndKeepsNeutralPrompt(t *t
 		t.Fatal("expected completion payload to be captured")
 	}
 	promptText, _ := ds.completionReq["prompt"].(string)
-	if !strings.Contains(promptText, promptcompat.BuildOpenAICurrentInputContextPrompt()) {
-		t.Fatalf("expected compacted-context prompt, got %s", promptText)
+	if !strings.Contains(promptText, "Answer the latest user request directly.") {
+		t.Fatalf("expected neutral completion prompt, got %s", promptText)
 	}
 	if strings.Contains(promptText, "first user turn") || strings.Contains(promptText, "latest user turn") {
 		t.Fatalf("expected prompt to hide original turns, got %s", promptText)
@@ -477,8 +474,8 @@ func TestResponsesCurrentInputFileUploadsContextAndKeepsNeutralPrompt(t *testing
 		t.Fatal("expected completion payload to be captured")
 	}
 	promptText, _ := ds.completionReq["prompt"].(string)
-	if !strings.Contains(promptText, promptcompat.BuildOpenAICurrentInputContextPrompt()) {
-		t.Fatalf("expected compacted-context prompt, got %s", promptText)
+	if !strings.Contains(promptText, "Answer the latest user request directly.") {
+		t.Fatalf("expected neutral completion prompt, got %s", promptText)
 	}
 	if strings.Contains(promptText, "first user turn") || strings.Contains(promptText, "latest user turn") {
 		t.Fatalf("expected prompt to hide original turns, got %s", promptText)
@@ -613,7 +610,7 @@ func TestCurrentInputFileWorksAcrossAutoDeleteModes(t *testing.T) {
 				t.Fatalf("expected completion payload for mode=%s", mode)
 			}
 			promptText, _ := ds.completionReq["prompt"].(string)
-			if !strings.Contains(promptText, promptcompat.BuildOpenAICurrentInputContextPrompt()) || strings.Contains(promptText, "first user turn") || strings.Contains(promptText, "latest user turn") {
+			if !strings.Contains(promptText, "Answer the latest user request directly.") || strings.Contains(promptText, "first user turn") || strings.Contains(promptText, "latest user turn") {
 				t.Fatalf("unexpected prompt for mode=%s: %s", mode, promptText)
 			}
 		})

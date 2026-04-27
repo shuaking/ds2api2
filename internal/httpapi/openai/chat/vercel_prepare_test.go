@@ -10,7 +10,6 @@ import (
 
 	"ds2api/internal/auth"
 	dsclient "ds2api/internal/deepseek/client"
-	"ds2api/internal/promptcompat"
 )
 
 func TestIsVercelStreamPrepareRequest(t *testing.T) {
@@ -131,8 +130,8 @@ func TestHandleVercelStreamPrepareAppliesCurrentInputFile(t *testing.T) {
 		t.Fatalf("expected payload object, got %#v", body["payload"])
 	}
 	promptText, _ := payload["prompt"].(string)
-	if !strings.Contains(promptText, promptcompat.BuildOpenAICurrentInputContextPrompt()) {
-		t.Fatalf("expected compacted-context prompt, got %s", promptText)
+	if !strings.Contains(promptText, "Answer the latest user request directly.") {
+		t.Fatalf("expected neutral prompt, got %s", promptText)
 	}
 	if strings.Contains(promptText, "first user turn") || strings.Contains(promptText, "latest user turn") {
 		t.Fatalf("expected original turns hidden from prompt, got %s", promptText)

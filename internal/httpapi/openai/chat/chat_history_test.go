@@ -317,9 +317,9 @@ func TestChatCompletionsCurrentInputFilePersistsNeutralPrompt(t *testing.T) {
 		t.Fatalf("expected IGNORE.txt upload, got %q", ds.uploadCalls[0].Filename)
 	}
 	if len(full.Messages) != 1 {
-		t.Fatalf("expected compacted-context prompt to be the only persisted message, got %#v", full.Messages)
+		t.Fatalf("expected neutral prompt to be the only persisted message, got %#v", full.Messages)
 	}
-	if !strings.Contains(full.Messages[0].Content, promptcompat.BuildOpenAICurrentInputContextPrompt()) {
-		t.Fatalf("expected compacted-context prompt to be persisted, got %#v", full.Messages[0])
+	if !strings.Contains(full.Messages[0].Content, "Answer the latest user request directly.") {
+		t.Fatalf("expected neutral prompt to be persisted, got %#v", full.Messages[0])
 	}
 }
