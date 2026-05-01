@@ -159,6 +159,6 @@ func toStringSet(in []string) map[string]struct{} {
 
 const (
 	KeepAliveTimeout  = 5
-	StreamIdleTimeout = 90
-	MaxKeepaliveCount = 10
+	StreamIdleTimeout = 300
+	MaxKeepaliveCount = 40
 )

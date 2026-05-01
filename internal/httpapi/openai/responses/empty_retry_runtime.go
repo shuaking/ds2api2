@@ -223,6 +223,9 @@ func (h *Handler) consumeResponsesStreamAttempt(r *http.Request, resp *http.Resp
 			}
 		},
 	})
+	if r.Context().Err() != nil {
+		return true, false
+	}
 	terminalWritten := streamRuntime.finalize(finalReason, allowDeferEmpty && finalReason != "content_filter")
 	if terminalWritten {
 		return true, false
