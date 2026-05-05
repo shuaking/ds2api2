@@ -214,26 +214,10 @@ func ResolveModel(store ModelAliasReader, requested string) (string, bool) {
 		return mapped, true
 	}
 	baseModel, noThinking := splitNoThinkingModel(model)
-	resolvedModel, ok := resolveCanonicalModel(aliases, baseModel)
-	if !ok {
-		return "", false
+	if mapped, ok := aliases[baseModel]; ok && IsSupportedDeepSeekModel(mapped) {
+		return withNoThinkingVariant(mapped, noThinking), true
 	}
-	return withNoThinkingVariant(resolvedModel, noThinking), true
-}
-
-func isRetiredHistoricalModel(model string) bool {
-	switch {
-	case strings.HasPrefix(model, "claude-1."):
-		return true
-	case strings.HasPrefix(model, "claude-2."):
-		return true
-	case strings.HasPrefix(model, "claude-instant-"):
-		return true
-	case strings.HasPrefix(model, "gpt-3.5"):
-		return true
-	default:
-		return false
-	}
+	return "", false
 }
 
 func lower(s string) string {
@@ -314,59 +298,4 @@ func loadModelAliases(store ModelAliasReader) map[string]string {
 		}
 	}
 	return aliases
-}
-
-func resolveCanonicalModel(aliases map[string]string, model string) (string, bool) {
-	model = lower(strings.TrimSpace(model))
-	if model == "" {
-		return "", false
-	}
-	if isRetiredHistoricalModel(model) {
-		return "", false
-	}
-	if IsSupportedDeepSeekModel(model) {
-		return model, true
-	}
-	if mapped, ok := aliases[model]; ok && IsSupportedDeepSeekModel(mapped) {
-		return mapped, true
-	}
-	if strings.HasPrefix(model, "deepseek-") {
-		return "", false
-	}
-
-	knownFamily := false
-	for _, prefix := range []string{
-		"gpt-", "o1", "o3", "claude-", "gemini-", "llama-", "qwen-", "mistral-", "command-",
-	} {
-		if strings.HasPrefix(model, prefix) {
-			knownFamily = true
-			break
-		}
-	}
-	if !knownFamily {
-		return "", false
-	}
-
-	useVision := strings.Contains(model, "vision")
-	useReasoner := strings.Contains(model, "reason") ||
-		strings.Contains(model, "reasoner") ||
-		strings.HasPrefix(model, "o1") ||
-		strings.HasPrefix(model, "o3") ||
-		strings.Contains(model, "opus") ||
-		strings.Contains(model, "slow") ||
-		strings.Contains(model, "r1")
-	useSearch := strings.Contains(model, "search")
-
-	switch {
-	case useVision:
-		return "deepseek-v4-vision", true
-	case useReasoner && useSearch:
-		return "deepseek-v4-pro-search", true
-	case useReasoner:
-		return "deepseek-v4-pro", true
-	case useSearch:
-		return "deepseek-v4-flash-search", true
-	default:
-		return "deepseek-v4-flash", true
-	}
 }
