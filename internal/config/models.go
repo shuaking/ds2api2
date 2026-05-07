@@ -19,7 +19,7 @@ type OllamaModelInfo struct {
 	ModifiedAt string `json:"modified_at"`
 }
 type OllamaCapabilitiesModelInfo struct {
-	ID       string
+	ID           string   `json:"id"`
 	Capabilities []string `json:"capabilities"`
 }
 
@@ -38,16 +38,16 @@ var deepSeekBaseModels = []ModelInfo{
 }
 
 var OllamaCapabilitiesModels = []OllamaCapabilitiesModelInfo{
-	{ID: "deepseek-v4-flash", Capabilities: []string{"tools","thinking"}},
-	{ID: "deepseek-v4-pro", Capabilities: []string{"tools","thinking"}},
-	{ID: "deepseek-v4-flash-search", Capabilities: []string{"tools","thinking"}},
-	{ID: "deepseek-v4-pro-search", Capabilities: []string{"tools","thinking"}},
-	{ID: "deepseek-v4-vision", Capabilities: []string{"tools","thinking","vision"}},
+	{ID: "deepseek-v4-flash", Capabilities: []string{"tools", "thinking"}},
+	{ID: "deepseek-v4-pro", Capabilities: []string{"tools", "thinking"}},
+	{ID: "deepseek-v4-flash-search", Capabilities: []string{"tools", "thinking"}},
+	{ID: "deepseek-v4-pro-search", Capabilities: []string{"tools", "thinking"}},
+	{ID: "deepseek-v4-vision", Capabilities: []string{"tools", "thinking", "vision"}},
 	{ID: "deepseek-v4-flash-nothinking", Capabilities: []string{"tools"}},
 	{ID: "deepseek-v4-pro-nothinking", Capabilities: []string{"tools"}},
 	{ID: "deepseek-v4-flash-search-nothinking", Capabilities: []string{"tools"}},
 	{ID: "deepseek-v4-pro-search-nothinking", Capabilities: []string{"tools"}},
-	{ID: "deepseek-v4-vision-nothinking", Capabilities: []string{"tools","vision"}},
+	{ID: "deepseek-v4-vision-nothinking", Capabilities: []string{"tools", "vision"}},
 }
 
 var DeepSeekModels = appendNoThinkingVariants(deepSeekBaseModels)
@@ -317,10 +317,10 @@ func mapToOllamaModels(models []ModelInfo) []OllamaModelInfo {
 	out := make([]OllamaModelInfo, 0, len(models))
 	for _, model := range models {
 		var modifiedAt string
-    	if model.Created > 0 {
-        	modifiedAt = time.Unix(model.Created, 0).Format(time.RFC3339)
-    	}
-    	ollamaModel :=  OllamaModelInfo{
+		if model.Created > 0 {
+			modifiedAt = time.Unix(model.Created, 0).Format(time.RFC3339)
+		}
+		ollamaModel := OllamaModelInfo{
 			Name:       model.ID,
 			Model:      model.ID,
 			Size:       0,
@@ -330,8 +330,6 @@ func mapToOllamaModels(models []ModelInfo) []OllamaModelInfo {
 	}
 	return out
 }
-
-
 
 func splitNoThinkingModel(model string) (string, bool) {
 	model = lower(strings.TrimSpace(model))

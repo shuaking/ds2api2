@@ -18,6 +18,7 @@
 - [OpenAI 兼容接口](#openai-兼容接口)
 - [Claude 兼容接口](#claude-兼容接口)
 - [Gemini 兼容接口](#gemini-兼容接口)
+- [Ollama 兼容接口](#ollama-兼容接口)
 - [Admin 接口](#admin-接口)
 - [错误响应格式](#错误响应格式)
 - [cURL 示例](#curl-示例)
@@ -125,6 +126,9 @@ Gemini 兼容客户端还可以使用 `x-goog-api-key`、`?key=` 或 `?api_key=`
 | POST | `/v1beta/models/{model}:streamGenerateContent` | 业务 | Gemini 流式 |
 | POST | `/v1/models/{model}:generateContent` | 业务 | Gemini 非流式兼容路径 |
 | POST | `/v1/models/{model}:streamGenerateContent` | 业务 | Gemini 流式兼容路径 |
+| GET | `/api/version` | 无 | Ollama 版本接口 |
+| GET | `/api/tags` | 无 | Ollama 模型列表 |
+| POST | `/api/show` | 无 | Ollama 单模型能力查询（返回 `id` 与 `capabilities`） |
 | POST | `/admin/login` | 无 | 管理登录 |
 | GET | `/admin/verify` | JWT | 校验管理 JWT |
 | GET | `/admin/vercel/config` | Admin | 读取 Vercel 预配置 |
@@ -627,6 +631,20 @@ data: {"type":"message_stop"}
 - token 计数优先透传上游 DeepSeek SSE（如 `accumulated_token_usage` / `token_usage`）；仅在上游缺失时回退本地估算
 
 ---
+
+## Ollama 兼容接口
+
+- `POST /api/show` 请求体：`{"model":"<model-id>"}`。
+- 响应字段使用小写 `id`（不是 `ID`），并返回 `capabilities` 数组，便于与 Ollama 风格客户端/严格 schema 对齐。
+
+示例响应：
+
+```json
+{
+  "id": "deepseek-v4-flash",
+  "capabilities": ["tools", "thinking"]
+}
+```
 
 ## Admin 接口
 

@@ -18,6 +18,7 @@ Docs: [Overview](README.en.md) / [Architecture](docs/ARCHITECTURE.en.md) / [Depl
 - [OpenAI-Compatible API](#openai-compatible-api)
 - [Claude-Compatible API](#claude-compatible-api)
 - [Gemini-Compatible API](#gemini-compatible-api)
+- [Ollama API](#ollama-api)
 - [Admin API](#admin-api)
 - [Error Payloads](#error-payloads)
 - [cURL Examples](#curl-examples)
@@ -123,6 +124,9 @@ Gemini-compatible clients can also send `x-goog-api-key`, `?key=`, or `?api_key=
 | POST | `/v1beta/models/{model}:streamGenerateContent` | Business | Gemini stream |
 | POST | `/v1/models/{model}:generateContent` | Business | Gemini non-stream compat path |
 | POST | `/v1/models/{model}:streamGenerateContent` | Business | Gemini stream compat path |
+| GET | `/api/version` | None | Ollama version endpoint |
+| GET | `/api/tags` | None | Ollama model list |
+| POST | `/api/show` | None | Ollama model capability query (returns `id` + `capabilities`) |
 | POST | `/admin/login` | None | Admin login |
 | GET | `/admin/verify` | JWT | Verify admin JWT |
 | GET | `/admin/vercel/config` | Admin | Read preconfigured Vercel creds |
@@ -616,6 +620,20 @@ Returns SSE (`text/event-stream`), each chunk as `data: <json>`:
 - Token counting prefers pass-through from upstream DeepSeek SSE (`accumulated_token_usage` / `token_usage`), and only falls back to local estimation when upstream usage is absent
 
 ---
+
+## Ollama API
+
+- `POST /api/show` request body: `{"model":"<model-id>"}`.
+- Response uses lowercase `id` (not `ID`) and includes `capabilities` for Ollama-style clients and strict schemas.
+
+Example response:
+
+```json
+{
+  "id": "deepseek-v4-flash",
+  "capabilities": ["tools", "thinking"]
+}
+```
 
 ## Admin API
 
