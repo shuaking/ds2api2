@@ -111,7 +111,7 @@ func TestBuildToolCallInstructions_WriteUsesFilePathAndContent(t *testing.T) {
 
 func TestBuildToolCallInstructions_AnchorsMissingOpeningWrapperFailureMode(t *testing.T) {
 	out := BuildToolCallInstructions([]string{"read_file"})
-	if !strings.Contains(out, "Never omit the opening <|DSML|tool_calls> tag") {
+	if !strings.Contains(out, "Never omit the opening <｜DSML｜tool_calls> tag") {
 		t.Fatalf("expected explicit missing-opening-tag warning, got: %s", out)
 	}
 	if !strings.Contains(out, "Wrong 3 — missing opening wrapper") {

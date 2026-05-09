@@ -134,7 +134,6 @@ func scanToolMarkupTagAt(text string, start int) (ToolMarkupTag, bool) {
 	if start < 0 || start >= len(text) || text[start] != '<' {
 		return ToolMarkupTag{}, false
 	}
-	lower := strings.ToLower(text)
 	i := start + 1
 	for i < len(text) && text[i] == '<' {
 		i++
@@ -144,8 +143,8 @@ func scanToolMarkupTagAt(text string, start int) (ToolMarkupTag, bool) {
 		closing = true
 		i++
 	}
-	i, dsmlLike := consumeToolMarkupNamePrefix(lower, text, i)
-	name, nameLen := matchToolMarkupName(lower, i, dsmlLike)
+	i, dsmlLike := consumeToolMarkupNamePrefix(text, i)
+	name, nameLen := matchToolMarkupName(text, i, dsmlLike)
 	if nameLen == 0 {
 		return ToolMarkupTag{}, false
 	}
@@ -188,7 +187,6 @@ func IsPartialToolMarkupTagPrefix(text string) bool {
 	if text == "" || text[0] != '<' || strings.Contains(text, ">") {
 		return false
 	}
-	lower := strings.ToLower(text)
 	i := 1
 	for i < len(text) && text[i] == '<' {
 		i++
@@ -203,13 +201,13 @@ func IsPartialToolMarkupTagPrefix(text string) bool {
 		if i == len(text) {
 			return true
 		}
-		if hasToolMarkupNamePrefix(lower[i:]) {
+		if hasToolMarkupNamePrefix(text, i) {
 			return true
 		}
-		if strings.HasPrefix("dsml", lower[i:]) {
+		if hasDSMLPrefix(text, i) {
 			return true
 		}
-		next, ok := consumeToolMarkupNamePrefixOnce(lower, text, i)
+		next, ok := consumeToolMarkupNamePrefixOnce(text, i)
 		if !ok {
 			return false
 		}
@@ -218,10 +216,10 @@ func IsPartialToolMarkupTagPrefix(text string) bool {
 	return false
 }
 
-func consumeToolMarkupNamePrefix(lower, text string, idx int) (int, bool) {
+func consumeToolMarkupNamePrefix(text string, idx int) (int, bool) {
 	dsmlLike := false
 	for {
-		next, ok := consumeToolMarkupNamePrefixOnce(lower, text, idx)
+		next, ok := consumeToolMarkupNamePrefixOnce(text, idx)
 		if !ok {
 			return idx, dsmlLike
 		}
@@ -230,14 +228,14 @@ func consumeToolMarkupNamePrefix(lower, text string, idx int) (int, bool) {
 	}
 }
 
-func consumeToolMarkupNamePrefixOnce(lower, text string, idx int) (int, bool) {
+func consumeToolMarkupNamePrefixOnce(text string, idx int) (int, bool) {
 	if next, ok := consumeToolMarkupPipe(text, idx); ok {
 		return next, true
 	}
 	if idx < len(text) && (text[idx] == ' ' || text[idx] == '\t' || text[idx] == '\r' || text[idx] == '\n') {
 		return idx + 1, true
 	}
-	if strings.HasPrefix(lower[idx:], "dsml") {
+	if hasASCIIPrefixFoldAt(text, idx, "dsml") {
 		next := idx + len("dsml")
 		if next < len(text) && (text[next] == '-' || text[next] == '_') {
 			next++
@@ -247,21 +245,49 @@ func consumeToolMarkupNamePrefixOnce(lower, text string, idx int) (int, bool) {
 	return idx, false
 }
 
-func hasToolMarkupNamePrefix(lowerTail string) bool {
+// hasDSMLPrefix checks if "dsml" starts with text[start:] (case-insensitive).
+func hasDSMLPrefix(text string, start int) bool {
+	const dsml = "dsml"
+	remain := len(text) - start
+	if remain <= 0 || remain > len(dsml) {
+		return false
+	}
+	for j := 0; j < remain; j++ {
+		if asciiLower(text[start+j]) != dsml[j] {
+			return false
+		}
+	}
+	return true
+}
+
+func hasToolMarkupNamePrefix(text string, start int) bool {
 	for _, name := range toolMarkupNames {
-		if strings.HasPrefix(lowerTail, name.raw) || strings.HasPrefix(name.raw, lowerTail) {
+		if hasASCIIPrefixFoldAt(text, start, name.raw) {
 			return true
+		}
+		tailLen := len(text) - start
+		if tailLen > 0 && tailLen <= len(name.raw) {
+			match := true
+			for j := 0; j < tailLen; j++ {
+				if asciiLower(text[start+j]) != asciiLower(name.raw[j]) {
+					match = false
+					break
+				}
+			}
+			if match {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-func matchToolMarkupName(lower string, start int, dsmlLike bool) (string, int) {
+func matchToolMarkupName(text string, start int, dsmlLike bool) (string, int) {
 	for _, name := range toolMarkupNames {
 		if name.dsmlOnly && !dsmlLike {
 			continue
 		}
-		if strings.HasPrefix(lower[start:], name.raw) {
+		if hasASCIIPrefixFoldAt(text, start, name.raw) {
 			return name.canonical, len(name.raw)
 		}
 	}
