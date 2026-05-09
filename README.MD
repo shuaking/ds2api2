@@ -295,7 +295,7 @@ cp config.example.json config.json
 base64 < config.json | tr -d '\n'
 ```
 
-> **流式说明**：`/v1/chat/completions` 在 Vercel 上默认走 `api/chat-stream.js`（Node Runtime）以保证实时 SSE。鉴权、账号选择、会话/PoW 准备仍由 Go 内部 prepare 接口完成；流式响应（含 `tools`）在 Node 侧执行与 Go 对齐的输出组装与防泄漏处理。虽然这里只有 OpenAI chat 流式走 Node，但 CORS 放行策略仍与 Go 主路由保持一致，统一覆盖第三方客户端预检场景。
+> **流式说明**：OpenAI Chat 流式在 Vercel 上会由 `api/chat-stream.js`（Node Runtime）承接，支持规范路径 `/v1/chat/completions` 与根路径快捷别名 `/chat/completions`。鉴权、账号选择、会话/PoW 准备仍由 Go 内部 prepare 接口完成；流式响应（含 `tools`）在 Node 侧执行与 Go 对齐的输出组装与防泄漏处理。虽然这里只有 OpenAI chat 流式走 Node，但 CORS 放行策略仍与 Go 主路由保持一致，统一覆盖第三方客户端预检场景。
 
 详细部署说明请参阅 [部署指南](docs/DEPLOY.md)。
 

@@ -243,6 +243,8 @@ Retired historical families such as `claude-1.*`, `claude-2.*`, `claude-instant-
 
 ### `POST /v1/chat/completions`
 
+> Path note: besides the canonical `/v1/chat/completions`, DS2API also accepts the root shortcut `/chat/completions`. On Vercel Runtime, `stream=true` on either path is handled by the Node streaming bridge, while non-stream stays on the Go primary path.
+
 **Headers**:
 
 ```http

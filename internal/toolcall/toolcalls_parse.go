@@ -212,17 +212,16 @@ func firstFenceMarkerIndex(line string) int {
 }
 
 func updateCDATAStateForStrip(inCDATA bool, cdataFenceMarker, line string) (bool, string) {
-	lower := strings.ToLower(line)
 	pos := 0
 	state := inCDATA
 	fenceMarker := cdataFenceMarker
 	lineForFence := line
 	if !state {
-		start := strings.Index(lower[pos:], "<![cdata[")
+		start := indexASCIIFold(line, pos, "<![cdata[")
 		if start < 0 {
 			return false, ""
 		}
-		pos += start + len("<![cdata[")
+		pos = start + len("<![cdata[")
 		state = true
 		lineForFence = line[pos:]
 	}
@@ -239,24 +238,23 @@ func updateCDATAStateForStrip(inCDATA bool, cdataFenceMarker, line string) (bool
 		fenceMarker = ""
 	}
 
-	for pos < len(lower) {
-		end := strings.Index(lower[pos:], "]]>")
-		if end < 0 {
+	for pos < len(line) {
+		endPos := indexASCIIFold(line, pos, "]]>")
+		if endPos < 0 {
 			return true, fenceMarker
 		}
-		endPos := pos + end
 		pos = endPos + len("]]>")
 		if fenceMarker != "" {
 			continue
 		}
-		if cdataEndLooksStructural(lower, pos) || strings.TrimSpace(lower[pos:]) == "" {
+		if cdataEndLooksStructural(line, pos) || strings.TrimSpace(line[pos:]) == "" {
 			state = false
-			for pos < len(lower) {
-				start := strings.Index(lower[pos:], "<![cdata[")
+			for pos < len(line) {
+				start := indexASCIIFold(line, pos, "<![cdata[")
 				if start < 0 {
 					return false, ""
 				}
-				pos += start + len("<![cdata[")
+				pos = start + len("<![cdata[")
 				state = true
 				trimmedTail := strings.TrimLeft(line[pos:], " \t")
 				if marker, ok := parseFenceOpen(trimmedTail); ok {

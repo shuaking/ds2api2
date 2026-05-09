@@ -141,7 +141,6 @@ func findXMLElementBlocks(text, tag string) []xmlElementBlock {
 }
 
 func findXMLStartTagOutsideCDATA(text, tag string, from int) (start, bodyStart int, attrs string, ok bool) {
-	lower := strings.ToLower(text)
 	target := "<" + strings.ToLower(tag)
 	for i := maxInt(from, 0); i < len(text); {
 		next, advanced, blocked := skipXMLIgnoredSection(text, i)
@@ -152,7 +151,7 @@ func findXMLStartTagOutsideCDATA(text, tag string, from int) (start, bodyStart i
 			i = next
 			continue
 		}
-		if strings.HasPrefix(lower[i:], target) && hasXMLTagBoundary(text, i+len(target)) {
+		if hasASCIIPrefixFoldAt(text, i, target) && hasXMLTagBoundary(text, i+len(target)) {
 			end := findXMLTagEnd(text, i+len(target))
 			if end < 0 {
 				return -1, -1, "", false
@@ -165,7 +164,6 @@ func findXMLStartTagOutsideCDATA(text, tag string, from int) (start, bodyStart i
 }
 
 func findMatchingXMLEndTagOutsideCDATA(text, tag string, from int) (closeStart, closeEnd int, ok bool) {
-	lower := strings.ToLower(text)
 	openTarget := "<" + strings.ToLower(tag)
 	closeTarget := "</" + strings.ToLower(tag)
 	depth := 1
@@ -178,7 +176,7 @@ func findMatchingXMLEndTagOutsideCDATA(text, tag string, from int) (closeStart, 
 			i = next
 			continue
 		}
-		if strings.HasPrefix(lower[i:], closeTarget) && hasXMLTagBoundary(text, i+len(closeTarget)) {
+		if hasASCIIPrefixFoldAt(text, i, closeTarget) && hasXMLTagBoundary(text, i+len(closeTarget)) {
 			end := findXMLTagEnd(text, i+len(closeTarget))
 			if end < 0 {
 				return -1, -1, false
@@ -190,7 +188,7 @@ func findMatchingXMLEndTagOutsideCDATA(text, tag string, from int) (closeStart, 
 			i = end + 1
 			continue
 		}
-		if strings.HasPrefix(lower[i:], openTarget) && hasXMLTagBoundary(text, i+len(openTarget)) {
+		if hasASCIIPrefixFoldAt(text, i, openTarget) && hasXMLTagBoundary(text, i+len(openTarget)) {
 			end := findXMLTagEnd(text, i+len(openTarget))
 			if end < 0 {
 				return -1, -1, false
@@ -245,6 +243,23 @@ func asciiLower(b byte) byte {
 		return b + ('a' - 'A')
 	}
 	return b
+}
+
+// indexASCIIFold returns the absolute byte position in s where substr (ASCII-only) is
+// found case-insensitively, scanning forward from start. Returns -1 if not found.
+// Unlike strings.Index on a lowercased copy, this does not allocate or risk byte-length
+// mismatch when non-ASCII runes change width under case folding.
+func indexASCIIFold(s string, start int, substr string) int {
+	if start < 0 || len(s)-start < len(substr) {
+		return -1
+	}
+	end := len(s) - len(substr) + 1
+	for i := start; i < end; i++ {
+		if hasASCIIPrefixFoldAt(s, i, substr) {
+			return i
+		}
+	}
+	return -1
 }
 
 func findToolCDATAEnd(text string, from int) int {

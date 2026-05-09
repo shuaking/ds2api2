@@ -292,7 +292,7 @@ func TestBuildClaudeToolPromptSingleTool(t *testing.T) {
 	if !containsStr(prompt, "Search the web") {
 		t.Fatalf("expected description in prompt")
 	}
-	if !containsStr(prompt, "<|DSML|tool_calls>") {
+	if !containsStr(prompt, "<｜DSML｜tool_calls>") {
 		t.Fatalf("expected DSML tool_calls format in prompt")
 	}
 	if !containsStr(prompt, "TOOL CALL FORMAT") {

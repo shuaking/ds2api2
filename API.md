@@ -249,6 +249,8 @@ OpenAI `/v1/*` 仍是规范路径。对于只配置 DS2API 根地址的客户端
 
 ### `POST /v1/chat/completions`
 
+> 路径说明：除规范路径 `/v1/chat/completions` 外，也支持根路径快捷别名 `/chat/completions`；在 Vercel Runtime 上，这两个路径的 `stream=true` 请求都会进入 Node 流式桥接逻辑，非流式仍走 Go 主链路。
+
 **请求头**：
 
 ```http

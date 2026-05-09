@@ -283,7 +283,7 @@ Recommended: convert `config.json` to Base64 locally, then paste into `DS2API_CO
 base64 < config.json | tr -d '\n'
 ```
 
-> **Streaming note**: `/v1/chat/completions` on Vercel is routed to `api/chat-stream.js` (Node Runtime) for real-time SSE. Auth, account selection, and session/PoW preparation are still handled by the Go internal prepare endpoint; streaming output (including `tools`) is assembled on Node with Go-aligned anti-leak handling. This is the only interface family currently routed through Node, and its CORS allow behavior is kept aligned with the Go router so third-party preflight handling stays unified.
+> **Streaming note**: OpenAI Chat streaming on Vercel is routed to `api/chat-stream.js` (Node Runtime), with both the canonical `/v1/chat/completions` path and the root shortcut `/chat/completions` supported. Auth, account selection, and session/PoW preparation are still handled by the Go internal prepare endpoint; streaming output (including `tools`) is assembled on Node with Go-aligned anti-leak handling. This is the only interface family currently routed through Node, and its CORS allow behavior is kept aligned with the Go router so third-party preflight handling stays unified.
 
 For detailed deployment instructions, see the [Deployment Guide](docs/DEPLOY.en.md).
 
